@@ -122,8 +122,8 @@ public class EmissionService {
 
         double differenceKg = co2A - co2B;
 
-        // Avoid division by zero: if A emits nothing, percentage difference is 0
-        double differencePercent = (co2A == 0.0) ? 0.0 : (differenceKg / co2A) * 100.0;
+        // Avoid division by zero: if A emits nothing (or effectively zero), percentage difference is 0
+        double differencePercent = (Math.abs(co2A) < 1e-10) ? 0.0 : (differenceKg / co2A) * 100.0;
 
         String betterOption;
         if (co2A < co2B) {

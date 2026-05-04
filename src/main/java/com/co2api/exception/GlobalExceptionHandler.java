@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -45,7 +46,7 @@ public class GlobalExceptionHandler {
 
         // Include object-level constraint violations (e.g. @NotEmpty on a list field)
         ex.getBindingResult().getGlobalErrors().stream()
-                .map(e -> e.getDefaultMessage())
+                .map(ObjectError::getDefaultMessage)
                 .forEach(messages::add);
 
         Map<String, Object> body = new LinkedHashMap<>();
