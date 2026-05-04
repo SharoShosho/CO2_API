@@ -17,8 +17,10 @@ A scalable and robust REST API built with **Java 17** and **Spring Boot 3** that
 - [API Usage](#api-usage)
   - [Authentication](#authentication)
   - [Calculate Emissions Endpoint](#calculate-emissions-endpoint)
-  - [Example Request](#example-request)
-  - [Example Response](#example-response)
+  - [Transport Types Endpoint](#transport-types-endpoint)
+  - [Batch Calculation Endpoint](#batch-calculation-endpoint)
+  - [Compare Endpoint](#compare-endpoint)
+- [Error Handling](#error-handling)
 - [Configuration](#configuration)
 - [Running Tests](#running-tests)
 - [Extending the Project](#extending-the-project)
@@ -28,9 +30,12 @@ A scalable and robust REST API built with **Java 17** and **Spring Boot 3** that
 ## Features
 
 - 🚛 CO₂ calculation for multiple transport modes (truck, train, flight, ship)
+- 📋 Transport types metadata endpoint — list all modes with emission factors
+- 📦 Batch calculation — submit up to 100 shipments in one request
+- ⚖️ Compare endpoint — side-by-side CO₂ comparison with percentage difference
 - 🔐 API key authentication via `X-API-KEY` header (configurable interceptor)
 - 📖 Interactive Swagger UI for testing endpoints in the browser
-- ✅ Bean Validation on all request fields
+- ✅ Bean Validation on all request fields with helpful error messages
 - 🗄️ Spring Data JPA + H2 in-memory database (ready for PostgreSQL / MySQL swap)
 - 🧪 Integration and unit tests with Spring Boot Test & MockMvc
 
@@ -59,26 +64,36 @@ co2-api/
 └── src/
     ├── main/
     │   ├── java/com/co2api/
-    │   │   ├── Co2ApiApplication.java          # Application entry point
+    │   │   ├── Co2ApiApplication.java              # Application entry point
     │   │   ├── config/
-    │   │   │   ├── SwaggerConfig.java           # OpenAPI / Swagger UI setup
-    │   │   │   └── WebConfig.java              # MVC interceptor registration
+    │   │   │   ├── SwaggerConfig.java               # OpenAPI / Swagger UI setup
+    │   │   │   └── WebConfig.java                  # MVC interceptor registration
     │   │   ├── controller/
-    │   │   │   └── CalculationController.java  # POST /api/v1/calculate
+    │   │   │   ├── CalculationController.java       # POST /api/v1/calculate
+    │   │   │   │                                    # POST /api/v1/calculate/batch
+    │   │   │   ├── TransportTypeController.java     # GET  /api/v1/transport-types
+    │   │   │   └── CompareController.java           # POST /api/v1/compare
     │   │   ├── dto/
-    │   │   │   ├── ShipmentRequest.java        # Incoming request body
-    │   │   │   └── EmissionResponse.java       # Outgoing response body
+    │   │   │   ├── ShipmentRequest.java             # Incoming request body (single)
+    │   │   │   ├── EmissionResponse.java            # Outgoing response body (single)
+    │   │   │   ├── BatchRequest.java                # Batch request body
+    │   │   │   ├── BatchResponse.java               # Batch response body
+    │   │   │   ├── CompareRequest.java              # Compare request body
+    │   │   │   ├── CompareResponse.java             # Compare response body
+    │   │   │   └── TransportTypeResponse.java       # Transport type metadata
     │   │   ├── enums/
-    │   │   │   └── TransportType.java          # Transport modes + emission factors
+    │   │   │   └── TransportType.java              # Transport modes + emission factors
+    │   │   ├── exception/
+    │   │   │   └── GlobalExceptionHandler.java     # Consistent 400 error responses
     │   │   ├── security/
-    │   │   │   └── ApiKeyInterceptor.java      # X-API-KEY validation
+    │   │   │   └── ApiKeyInterceptor.java          # X-API-KEY validation
     │   │   └── service/
-    │   │       └── EmissionService.java        # CO₂ calculation logic
+    │   │       └── EmissionService.java            # CO₂ calculation logic
     │   └── resources/
-    │       └── application.properties          # App configuration
+    │       └── application.properties              # App configuration
     └── test/
         └── java/com/co2api/
-            └── Co2ApiApplicationTests.java     # Integration & unit tests
+            └── Co2ApiApplicationTests.java         # Integration & unit tests
 ```
 
 ---
@@ -177,9 +192,7 @@ Swagger UI paths (`/swagger-ui/**`, `/v3/api-docs/**`) are publicly accessible w
 | `distanceKm` | number | ✅ | Shipment distance in kilometres (min 1) |
 | `transportType` | string (enum) | ✅ | One of: `DIESEL_TRUCK`, `ELECTRIC_TRUCK`, `TRAIN`, `FLIGHT`, `SHIP` |
 
----
-
-### Example Request
+**Example Request:**
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/calculate \
@@ -192,7 +205,7 @@ curl -X POST http://localhost:8080/api/v1/calculate \
   }'
 ```
 
-### Example Response
+**Example Response:**
 
 ```json
 {
@@ -204,10 +217,228 @@ curl -X POST http://localhost:8080/api/v1/calculate \
 }
 ```
 
-**Calculation breakdown:**
+---
+
+### Transport Types Endpoint
+
+Returns all supported transport types with their emission factors, unit, and description.
+Useful for building dynamic dropdowns on the client side without hardcoding enum values.
+
+| Property | Value |
+|---|---|
+| **Method** | `GET` |
+| **Path** | `/api/v1/transport-types` |
+| **Authorization** | `X-API-KEY` header |
+
+**Example Request:**
+
+```bash
+curl -X GET http://localhost:8080/api/v1/transport-types \
+  -H "X-API-KEY: changeme-replace-in-production"
 ```
-5000 kg / 1000 = 5 tons
-5 tons × 800 km × 0.11 (kg CO₂/t·km) = 440 kg CO₂
+
+**Example Response:**
+
+```json
+[
+  {
+    "type": "DIESEL_TRUCK",
+    "emissionFactor": 0.11,
+    "unit": "kgCO2_per_tkm",
+    "description": "Standard diesel-powered road freight truck"
+  },
+  {
+    "type": "ELECTRIC_TRUCK",
+    "emissionFactor": 0.03,
+    "unit": "kgCO2_per_tkm",
+    "description": "Electric freight truck — significantly lower emissions than diesel"
+  },
+  {
+    "type": "TRAIN",
+    "emissionFactor": 0.02,
+    "unit": "kgCO2_per_tkm",
+    "description": "Freight train — one of the most efficient land transport options"
+  },
+  {
+    "type": "FLIGHT",
+    "emissionFactor": 0.50,
+    "unit": "kgCO2_per_tkm",
+    "description": "Cargo aircraft — highest emission intensity per ton-km"
+  },
+  {
+    "type": "SHIP",
+    "emissionFactor": 0.01,
+    "unit": "kgCO2_per_tkm",
+    "description": "Ocean cargo vessel — very efficient for large volumes over long distances"
+  }
+]
+```
+
+---
+
+### Batch Calculation Endpoint
+
+Submit up to **100** shipments in a single request and receive individual results plus an aggregated total.
+
+| Property | Value |
+|---|---|
+| **Method** | `POST` |
+| **Path** | `/api/v1/calculate/batch` |
+| **Content-Type** | `application/json` |
+| **Authorization** | `X-API-KEY` header |
+
+**Request body fields:**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `shipments` | array | ✅ | Array of ShipmentRequest objects (1–100 items) |
+
+**Example Request:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/calculate/batch \
+  -H "Content-Type: application/json" \
+  -H "X-API-KEY: changeme-replace-in-production" \
+  -d '{
+    "shipments": [
+      { "weightKg": 5000, "distanceKm": 800, "transportType": "DIESEL_TRUCK" },
+      { "weightKg": 1200, "distanceKm": 300, "transportType": "TRAIN" }
+    ]
+  }'
+```
+
+**Example Response:**
+
+```json
+{
+  "results": [
+    {
+      "transportType": "DIESEL_TRUCK",
+      "weightKg": 5000.0,
+      "distanceKm": 800.0,
+      "totalCo2Kg": 440.0,
+      "emissionFactor": 0.11
+    },
+    {
+      "transportType": "TRAIN",
+      "weightKg": 1200.0,
+      "distanceKm": 300.0,
+      "totalCo2Kg": 7.2,
+      "emissionFactor": 0.02
+    }
+  ],
+  "totalCo2Kg": 447.2
+}
+```
+
+**Validation errors (400):**
+
+- Empty `shipments` array → `"shipments list must not be empty"`
+- More than 100 items → `"Batch size must not exceed 100 shipments"`
+- Invalid item fields → field-level validation messages per item
+
+---
+
+### Compare Endpoint
+
+Compare CO₂ emissions for two shipment options (A vs B) side by side.
+
+| Property | Value |
+|---|---|
+| **Method** | `POST` |
+| **Path** | `/api/v1/compare` |
+| **Content-Type** | `application/json` |
+| **Authorization** | `X-API-KEY` header |
+
+**Request body fields:**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `optionA` | ShipmentRequest | ✅ | First shipment option |
+| `optionB` | ShipmentRequest | ✅ | Second shipment option |
+
+**Response body fields:**
+
+| Field | Type | Description |
+|---|---|---|
+| `optionA` | EmissionResponse | Emission result for option A |
+| `optionB` | EmissionResponse | Emission result for option B |
+| `differenceKg` | number | `optionA.totalCo2Kg − optionB.totalCo2Kg` (positive = A emits more) |
+| `differencePercent` | number | Relative difference: `(A − B) / A × 100` |
+| `betterOption` | string | `"OPTION_A"`, `"OPTION_B"`, or `"EQUAL"` |
+
+**Example Request:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/compare \
+  -H "Content-Type: application/json" \
+  -H "X-API-KEY: changeme-replace-in-production" \
+  -d '{
+    "optionA": { "weightKg": 5000, "distanceKm": 800, "transportType": "DIESEL_TRUCK" },
+    "optionB": { "weightKg": 5000, "distanceKm": 800, "transportType": "TRAIN" }
+  }'
+```
+
+**Example Response:**
+
+```json
+{
+  "optionA": {
+    "transportType": "DIESEL_TRUCK",
+    "weightKg": 5000.0,
+    "distanceKm": 800.0,
+    "totalCo2Kg": 440.0,
+    "emissionFactor": 0.11
+  },
+  "optionB": {
+    "transportType": "TRAIN",
+    "weightKg": 5000.0,
+    "distanceKm": 800.0,
+    "totalCo2Kg": 80.0,
+    "emissionFactor": 0.02
+  },
+  "differenceKg": 360.0,
+  "differencePercent": 81.82,
+  "betterOption": "OPTION_B"
+}
+```
+
+---
+
+## Error Handling
+
+All validation errors return **HTTP 400 Bad Request** with a consistent JSON body:
+
+```json
+{
+  "status": 400,
+  "error": "Validation failed",
+  "messages": [
+    "weightKg: Weight is required",
+    "transportType: Transport type is required"
+  ]
+}
+```
+
+Malformed JSON or unknown enum values also return 400:
+
+```json
+{
+  "status": 400,
+  "error": "Malformed request body",
+  "messages": [
+    "The request body is missing or contains invalid JSON. Check that all enum values are valid (e.g. DIESEL_TRUCK, TRAIN, FLIGHT, SHIP, ELECTRIC_TRUCK)."
+  ]
+}
+```
+
+Missing or invalid API key returns **HTTP 401 Unauthorized**:
+
+```json
+{
+  "error": "Unauthorized",
+  "message": "Missing or invalid X-API-KEY header"
+}
 ```
 
 ---
@@ -237,8 +468,18 @@ The test suite covers:
 
 - ✅ CO₂ calculation correctness for each transport type
 - ✅ `POST /api/v1/calculate` returns `200` with a valid API key
-- ✅ `POST /api/v1/calculate` returns `401` with a missing or wrong API key
+- ✅ `POST /api/v1/calculate` returns `401` without / with wrong API key
 - ✅ `POST /api/v1/calculate` returns `400` for an invalid request body
+- ✅ `GET /api/v1/transport-types` returns `200` with known type and factor
+- ✅ `GET /api/v1/transport-types` returns `401` without API key
+- ✅ `POST /api/v1/calculate/batch` returns `200` with correct `totalCo2Kg`
+- ✅ `POST /api/v1/calculate/batch` returns `400` for empty shipments list
+- ✅ `POST /api/v1/calculate/batch` returns `400` when exceeding max batch size
+- ✅ `POST /api/v1/calculate/batch` returns `401` without API key
+- ✅ `POST /api/v1/compare` returns `200` with correct `betterOption`
+- ✅ `POST /api/v1/compare` returns `EQUAL` when both options are identical
+- ✅ `POST /api/v1/compare` returns `400` when a required option is missing
+- ✅ `POST /api/v1/compare` returns `401` without API key
 - ✅ Spring application context loads successfully
 
 ---
@@ -249,7 +490,7 @@ The project is designed to be easy to extend:
 
 | Goal | How |
 |---|---|
-| **Add a new transport type** | Add a constant to `TransportType.java` with the emission factor |
+| **Add a new transport type** | Add a constant to `TransportType.java` with the emission factor and description |
 | **Persist calculation history** | Add a JPA `@Entity` and `JpaRepository`; call `.save()` in `EmissionService` |
 | **Switch to PostgreSQL** | Replace the H2 dependency with the PostgreSQL driver in `pom.xml` and update `application.properties` |
 | **Add rate limiting** | Create a new `HandlerInterceptor` and register it in `WebConfig` |

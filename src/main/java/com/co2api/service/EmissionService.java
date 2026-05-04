@@ -1,8 +1,18 @@
 package com.co2api.service;
 
+import com.co2api.dto.BatchRequest;
+import com.co2api.dto.BatchResponse;
+import com.co2api.dto.CompareRequest;
+import com.co2api.dto.CompareResponse;
 import com.co2api.dto.EmissionResponse;
 import com.co2api.dto.ShipmentRequest;
+import com.co2api.dto.TransportTypeResponse;
+import com.co2api.enums.TransportType;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service responsible for calculating CO2 emissions based on shipment data.
@@ -48,6 +58,88 @@ public class EmissionService {
                 .distanceKm(request.getDistanceKm())
                 .emissionFactor(emissionFactor)
                 .totalCo2Kg(totalCo2)
+                .build();
+    }
+
+    /**
+     * Returns metadata for all supported transport types derived from the TransportType enum.
+     *
+     * @return list of TransportTypeResponse, one per enum constant
+     */
+    public List<TransportTypeResponse> getAllTransportTypes() {
+        return Arrays.stream(TransportType.values())
+                .map(t -> TransportTypeResponse.builder()
+                        .type(t.name())
+                        .emissionFactor(t.getEmissionFactor())
+                        .unit("kgCO2_per_tkm")
+                        .description(t.getDescription())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Calculates CO2 emissions for a batch of shipment requests.
+     *
+     * Each shipment is calculated individually and the results are aggregated.
+     *
+     * @param batchRequest the batch containing a list of ShipmentRequests
+     * @return a BatchResponse with individual results and total CO2 across all shipments
+     */
+    public BatchResponse calculateBatch(BatchRequest batchRequest) {
+        List<EmissionResponse> results = batchRequest.getShipments().stream()
+                .map(this::calculateEmissions)
+                .collect(Collectors.toList());
+
+        double totalCo2Kg = results.stream()
+                .mapToDouble(EmissionResponse::getTotalCo2Kg)
+                .sum();
+
+        return BatchResponse.builder()
+                .results(results)
+                .totalCo2Kg(totalCo2Kg)
+                .build();
+    }
+
+    /**
+     * Compares CO2 emissions for two shipment options (A and B).
+     *
+     * Calculates the absolute and relative difference, and determines which option
+     * produces fewer CO2 emissions.
+     *
+     * differenceKg      = optionA.totalCo2Kg − optionB.totalCo2Kg
+     * differencePercent = (A − B) / A × 100  (0.0 when A == 0 to avoid division by zero)
+     * betterOption      = "OPTION_A" | "OPTION_B" | "EQUAL"
+     *
+     * @param compareRequest the compare request containing optionA and optionB
+     * @return a CompareResponse with side-by-side results and comparison metrics
+     */
+    public CompareResponse compareEmissions(CompareRequest compareRequest) {
+        EmissionResponse resultA = calculateEmissions(compareRequest.getOptionA());
+        EmissionResponse resultB = calculateEmissions(compareRequest.getOptionB());
+
+        double co2A = resultA.getTotalCo2Kg();
+        double co2B = resultB.getTotalCo2Kg();
+
+        double differenceKg = co2A - co2B;
+
+        // Avoid division by zero: if A emits nothing (or effectively zero), percentage difference is 0
+        double differencePercent = (Math.abs(co2A) < 1e-10) ? 0.0 : (differenceKg / co2A) * 100.0;
+
+        String betterOption;
+        if (co2A < co2B) {
+            betterOption = "OPTION_A";
+        } else if (co2B < co2A) {
+            betterOption = "OPTION_B";
+        } else {
+            betterOption = "EQUAL";
+        }
+
+        return CompareResponse.builder()
+                .optionA(resultA)
+                .optionB(resultB)
+                .differenceKg(differenceKg)
+                .differencePercent(differencePercent)
+                .betterOption(betterOption)
                 .build();
     }
 }
