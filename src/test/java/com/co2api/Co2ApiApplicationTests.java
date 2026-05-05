@@ -216,8 +216,8 @@ class Co2ApiApplicationTests {
         mockMvc.perform(get("/api/v1/transport-types")
                         .header("X-API-KEY", API_KEY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.type == 'DIESEL_TRUCK')].emissionFactor").value(0.11))
-                .andExpect(jsonPath("$[?(@.type == 'DIESEL_TRUCK')].unit").value("kgCO2_per_tkm"));
+                .andExpect(jsonPath("$[?(@.code == 'DIESEL_TRUCK')].emissionFactor").value(0.11))
+                .andExpect(jsonPath("$[?(@.code == 'DIESEL_TRUCK')].unit").value("kg CO2 / t·km"));
     }
 
     @Test
@@ -335,8 +335,8 @@ class Co2ApiApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.optionA.totalCo2Kg").value(440.0))
                 .andExpect(jsonPath("$.optionB.totalCo2Kg").value(80.0))
-                .andExpect(jsonPath("$.differenceKg").value(360.0))
-                .andExpect(jsonPath("$.betterOption").value("OPTION_B"));
+                .andExpect(jsonPath("$.differenceCo2Kg").value(360.0))
+                .andExpect(jsonPath("$.lowerEmissionOption").value("OPTION_B"));
     }
 
     @Test
@@ -356,8 +356,8 @@ class Co2ApiApplicationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(compareRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.betterOption").value("EQUAL"))
-                .andExpect(jsonPath("$.differenceKg").value(0.0));
+                .andExpect(jsonPath("$.lowerEmissionOption").value("EQUAL"))
+                .andExpect(jsonPath("$.differenceCo2Kg").value(0.0));
     }
 
     @Test

@@ -69,10 +69,9 @@ public class EmissionService {
     public List<TransportTypeResponse> getAllTransportTypes() {
         return Arrays.stream(TransportType.values())
                 .map(t -> TransportTypeResponse.builder()
-                        .type(t.name())
+                        .code(t.name())
                         .emissionFactor(t.getEmissionFactor())
-                        .unit("kgCO2_per_tkm")
-                        .description(t.getDescription())
+                        .unit("kg CO2 / t·km")
                         .build())
                 .collect(Collectors.toList());
     }
@@ -134,12 +133,23 @@ public class EmissionService {
             betterOption = "EQUAL";
         }
 
+        double absoluteDifferenceKg = Math.abs(differenceKg);
+
+        String summary;
+        if ("OPTION_A".equals(betterOption)) {
+            summary = "Option A has " + absoluteDifferenceKg + " kg lower CO2 than option B.";
+        } else if ("OPTION_B".equals(betterOption)) {
+            summary = "Option B has " + absoluteDifferenceKg + " kg lower CO2 than option A.";
+        } else {
+            summary = "Both options have the same CO2 emissions.";
+        }
+
         return CompareResponse.builder()
                 .optionA(resultA)
                 .optionB(resultB)
-                .differenceKg(differenceKg)
-                .differencePercent(differencePercent)
-                .betterOption(betterOption)
+                .differenceCo2Kg(absoluteDifferenceKg)
+                .lowerEmissionOption(betterOption)
+                .summary(summary)
                 .build();
     }
 }

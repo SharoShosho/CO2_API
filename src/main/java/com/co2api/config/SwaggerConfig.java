@@ -55,4 +55,6 @@ public class SwaggerConfig {
                                         .name("X-API-KEY")
                                         .description("Primary API key header. RapidAPI users can also send the key in X-RapidAPI-Key when the API is proxied through RapidAPI.")));
     }
+
+    // No explicit GroupedOpenApi bean: rely on package scanning and the OpenAPI bean above.
 }

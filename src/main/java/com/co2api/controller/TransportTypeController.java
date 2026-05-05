@@ -1,10 +1,11 @@
 package com.co2api.controller;
 
+import com.co2api.dto.ApiErrorResponse;
 import com.co2api.dto.TransportTypeResponse;
 import com.co2api.service.EmissionService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -19,45 +20,55 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * REST controller that exposes the transport types metadata endpoint.
- *
- * Base path: /api/v1/transport-types
- *
- * All endpoints require a valid X-API-KEY header (enforced by ApiKeyInterceptor).
+ * REST controller exposing supported transport types.
  */
 @RestController
 @RequestMapping("/api/v1/transport-types")
 @RequiredArgsConstructor
-@Tag(name = "Transport Types", description = "Endpoint for retrieving supported transport types and their emission factors")
+@Tag(name = "Transport Types", description = "List supported transport types and emission factors")
 public class TransportTypeController {
 
     private final EmissionService emissionService;
 
-    /**
-     * Returns a list of all supported transport types with their emission factors,
-     * units, and descriptions.
-     *
-     * Useful for building dynamic dropdowns or validating transport type values
-     * on the client side without hardcoding enum names.
-     *
-     * @return 200 OK with an array of TransportTypeResponse objects
-     */
     @Operation(
-        summary = "List all supported transport types",
-        description = "Returns all transport types supported by the API, including their CO2 emission factors (kg CO2 per ton-km) and descriptions.",
-        security = @SecurityRequirement(name = "ApiKeyAuth")
+            summary = "List all supported transport types",
+            description = "Returns the transport types supported by the API together with their emission factors.",
+            security = @SecurityRequirement(name = "ApiKeyAuth")
     )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Transport types retrieved successfully",
-            content = @Content(mediaType = "application/json",
-                array = @ArraySchema(schema = @Schema(implementation = TransportTypeResponse.class)))
-        ),
-        @ApiResponse(responseCode = "401", description = "Missing or invalid X-API-KEY header")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Transport types returned successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TransportTypeResponse.class),
+                            examples = {@ExampleObject(
+                                    name = "Transport types example",
+                                    summary = "Supported transport types",
+                                    value = """
+                                            [
+                                              {"code":"DIESEL_TRUCK","emissionFactor":0.11,"unit":"kg CO2 / t·km"},
+                                              {"code":"ELECTRIC_TRUCK","emissionFactor":0.03,"unit":"kg CO2 / t·km"},
+                                              {"code":"TRAIN","emissionFactor":0.02,"unit":"kg CO2 / t·km"},
+                                              {"code":"FLIGHT","emissionFactor":0.50,"unit":"kg CO2 / t·km"},
+                                              {"code":"SHIP","emissionFactor":0.01,"unit":"kg CO2 / t·km"}
+                                            ]
+                                            """
+                            )}
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid API key",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
+            )
     })
     @GetMapping
     public ResponseEntity<List<TransportTypeResponse>> getTransportTypes() {
         return ResponseEntity.ok(emissionService.getAllTransportTypes());
     }
 }
+

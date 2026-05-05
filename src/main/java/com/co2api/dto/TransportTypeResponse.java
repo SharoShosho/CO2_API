@@ -7,31 +7,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Data Transfer Object (DTO) representing a single transport type with its metadata.
- *
- * Returned as part of the GET /api/v1/transport-types response.
+ * Lightweight transport type view returned by the catalog endpoint.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Metadata for a supported transport type")
+@Schema(description = "Transport type catalog entry")
 public class TransportTypeResponse {
 
-    /** Enum name of the transport type (e.g. DIESEL_TRUCK). */
-    @Schema(description = "Transport type identifier", example = "DIESEL_TRUCK")
-    private String type;
+    @Schema(description = "Transport type code", example = "DIESEL_TRUCK")
+    private String code;
 
-    /** CO2 emission factor in kg CO2 per ton-kilometre. */
-    @Schema(description = "CO2 emission factor (kg CO2 per ton-km)", example = "0.11")
+    @Schema(description = "Emission factor in kg CO2 per ton-km", example = "0.11")
     private double emissionFactor;
 
-    /** Unit of the emission factor. Always 'kgCO2_per_tkm'. */
-    @Schema(description = "Unit of the emission factor", example = "kgCO2_per_tkm")
+    @Schema(description = "Measurement unit for the emission factor", example = "kg CO2 / t·km")
     private String unit;
-
-    /** Human-readable description of the transport type. */
-    @Schema(description = "Human-readable description of the transport type",
-            example = "Standard diesel-powered road freight truck")
-    private String description;
 }
+

@@ -155,4 +155,6 @@ public class CalculationController {
         EmissionResponse response = emissionService.calculateEmissions(request);
         return ResponseEntity.ok(response);
     }
+
+
 }

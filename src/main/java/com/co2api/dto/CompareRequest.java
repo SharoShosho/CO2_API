@@ -6,23 +6,20 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
- * Request body for the POST /api/v1/compare endpoint.
- *
- * Contains two shipment options (A and B) to compare CO2 emissions side by side.
+ * Request body used by the compare endpoint.
  */
 @Data
-@Schema(description = "Request payload for comparing CO2 emissions of two shipment options")
+@Schema(description = "Request payload for comparing two shipment emission calculations")
 public class CompareRequest {
 
-    /** First shipment option (A). */
-    @NotNull(message = "optionA is required")
+    @NotNull(message = "Option A is required")
     @Valid
-    @Schema(description = "First shipment option to compare", required = true)
+    @Schema(description = "First shipment option to compare")
     private ShipmentRequest optionA;
 
-    /** Second shipment option (B). */
-    @NotNull(message = "optionB is required")
+    @NotNull(message = "Option B is required")
     @Valid
-    @Schema(description = "Second shipment option to compare", required = true)
+    @Schema(description = "Second shipment option to compare")
     private ShipmentRequest optionB;
 }
+
