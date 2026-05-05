@@ -1,5 +1,7 @@
 package com.co2api.enums;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Enum representing supported transport modes for CO2 emission calculation.
  *
@@ -8,6 +10,7 @@ package com.co2api.enums;
  *
  * To add a new transport type, simply add a new constant with the appropriate emission factor.
  */
+@Schema(description = "Supported transport modes for shipment emission calculations")
 public enum TransportType {
 
     /** Standard diesel-powered road freight truck. */

@@ -1,10 +1,16 @@
 package com.co2api.security;
 
+import com.co2api.dto.ApiErrorResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.http.MediaType;
+import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 /**
  * HTTP interceptor that enforces API key authentication for all incoming requests.
@@ -19,10 +25,14 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * environment variable API_KEY) and restart the application — no code changes needed.
  */
 @Component
+@RequiredArgsConstructor
 public class ApiKeyInterceptor implements HandlerInterceptor {
 
     /** Name of the HTTP header that must carry the API key. */
     private static final String API_KEY_HEADER = "X-API-KEY";
+
+    /** RapidAPI commonly forwards the key in this header when used behind their proxy. */
+    private static final String RAPID_API_KEY_HEADER = "X-RapidAPI-Key";
 
     /**
      * The valid API key, injected from the 'api.key' property in application.properties.
@@ -30,6 +40,8 @@ public class ApiKeyInterceptor implements HandlerInterceptor {
      */
     @Value("${api.key}")
     private String validApiKey;
+
+    private final ObjectMapper objectMapper;
 
     /**
      * Intercepts every incoming HTTP request before it reaches the controller.
@@ -59,14 +71,21 @@ public class ApiKeyInterceptor implements HandlerInterceptor {
 
         // Retrieve the API key from the request header
         String providedKey = request.getHeader(API_KEY_HEADER);
+        if (providedKey == null) {
+            providedKey = request.getHeader(RAPID_API_KEY_HEADER);
+        }
 
         // Reject the request if no key was provided or the key does not match
         if (providedKey == null || !providedKey.equals(validApiKey)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(
-                "{\"error\": \"Unauthorized\", \"message\": \"Missing or invalid X-API-KEY header\"}"
-            );
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            objectMapper.writeValue(response.getWriter(), ApiErrorResponse.builder()
+                    .status(HttpServletResponse.SC_UNAUTHORIZED)
+                    .error("Unauthorized")
+                    .message("Missing or invalid API key")
+                    .path(requestPath)
+                    .details(List.of())
+                    .build());
             return false;
         }
 

@@ -17,7 +17,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Response containing the calculated CO2 emission for a shipment")
+@Schema(
+        description = "Response containing the calculated CO2 emission for a shipment.",
+        example = "{\"transportType\":\"DIESEL_TRUCK\",\"weightKg\":5000.0,\"distanceKm\":800.0,\"totalCo2Kg\":440.0,\"emissionFactor\":0.11}"
+)
 public class EmissionResponse {
 
     /** Transport mode used in the calculation. */

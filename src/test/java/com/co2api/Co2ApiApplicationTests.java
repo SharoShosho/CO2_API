@@ -19,10 +19,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Integration and unit tests for the CO2 Emission API.
- *
- * @SpringBootTest loads the full application context.
- * @AutoConfigureMockMvc sets up MockMvc for HTTP-layer testing without a real server.
+ * Integration and unit tests for the CO2 Emission API. SpringBootTest loads
+ * the full application context. AutoConfigureMockMvc sets up MockMvc for
+ * HTTP-layer testing without a real server.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -122,6 +121,22 @@ class Co2ApiApplicationTests {
     }
 
     @Test
+    @DisplayName("POST /api/v1/calculate accepts RapidAPI-style API key header")
+    void calculateEndpointAcceptsRapidApiKeyHeader() throws Exception {
+        ShipmentRequest req = new ShipmentRequest();
+        req.setWeightKg(5000.0);
+        req.setDistanceKm(800.0);
+        req.setTransportType(TransportType.DIESEL_TRUCK);
+
+        mockMvc.perform(post("/api/v1/calculate")
+                        .header("X-RapidAPI-Key", "changeme-replace-in-production")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalCo2Kg").value(440.0));
+    }
+
+    @Test
     @DisplayName("POST /api/v1/calculate returns 401 with wrong API key")
     void calculateEndpointReturns401WithWrongKey() throws Exception {
         ShipmentRequest req = new ShipmentRequest();
@@ -146,7 +161,27 @@ class Co2ApiApplicationTests {
                         .header("X-API-KEY", "changeme-replace-in-production")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.path").value("/api/v1/calculate"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/calculate returns standardized 401 error payload")
+    void calculateEndpointReturnsStandardized401Error() throws Exception {
+        ShipmentRequest req = new ShipmentRequest();
+        req.setWeightKg(5000.0);
+        req.setDistanceKm(800.0);
+        req.setTransportType(TransportType.DIESEL_TRUCK);
+
+        mockMvc.perform(post("/api/v1/calculate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.path").value("/api/v1/calculate"));
     }
 
     @Test

@@ -14,7 +14,10 @@ import lombok.Data;
  * the service layer.
  */
 @Data
-@Schema(description = "Request payload for calculating CO2 emissions for a shipment")
+@Schema(
+        description = "Request payload for calculating CO2 emissions for a shipment.",
+        example = "{\"weightKg\":5000,\"distanceKm\":800,\"transportType\":\"DIESEL_TRUCK\"}"
+)
 public class ShipmentRequest {
 
     /**
@@ -23,7 +26,7 @@ public class ShipmentRequest {
      */
     @NotNull(message = "Weight is required")
     @Min(value = 1, message = "Weight must be at least 1 kg")
-    @Schema(description = "Weight of the shipment in kilograms", example = "5000", required = true)
+    @Schema(description = "Weight of the shipment in kilograms", example = "5000.0", requiredMode = Schema.RequiredMode.REQUIRED)
     private Double weightKg;
 
     /**
@@ -32,7 +35,7 @@ public class ShipmentRequest {
      */
     @NotNull(message = "Distance is required")
     @Min(value = 1, message = "Distance must be at least 1 km")
-    @Schema(description = "Distance of the shipment in kilometres", example = "800", required = true)
+    @Schema(description = "Distance of the shipment in kilometres", example = "800.0", requiredMode = Schema.RequiredMode.REQUIRED)
     private Double distanceKm;
 
     /**
@@ -43,7 +46,7 @@ public class ShipmentRequest {
     @Schema(
         description = "Mode of transport",
         example = "DIESEL_TRUCK",
-        required = true,
+        requiredMode = Schema.RequiredMode.REQUIRED,
         allowableValues = {"DIESEL_TRUCK", "ELECTRIC_TRUCK", "TRAIN", "FLIGHT", "SHIP"}
     )
     private TransportType transportType;
