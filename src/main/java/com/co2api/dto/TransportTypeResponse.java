@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Lightweight transport type view returned by the catalog endpoint.
+ * Lightweight transport type view returned by the catalog endpoints.
  */
 @Data
 @Builder
@@ -24,5 +24,9 @@ public class TransportTypeResponse {
 
     @Schema(description = "Measurement unit for the emission factor", example = "kg CO2 / t·km")
     private String unit;
+
+    @Schema(description = "Human-readable description of this transport type",
+            example = "Standard diesel-powered road freight truck")
+    private String description;
 }
 

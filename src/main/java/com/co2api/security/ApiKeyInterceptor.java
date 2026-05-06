@@ -80,6 +80,7 @@ public class ApiKeyInterceptor implements HandlerInterceptor {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             objectMapper.writeValue(response.getWriter(), ApiErrorResponse.builder()
+                    .timestamp(java.time.OffsetDateTime.now())
                     .status(HttpServletResponse.SC_UNAUTHORIZED)
                     .error("Unauthorized")
                     .message("Missing or invalid API key")

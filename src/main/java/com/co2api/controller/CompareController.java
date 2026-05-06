@@ -1,5 +1,6 @@
 package com.co2api.controller;
 
+import com.co2api.config.ApiConstants;
 import com.co2api.dto.ApiErrorResponse;
 import com.co2api.dto.CompareRequest;
 import com.co2api.dto.CompareResponse;
@@ -16,16 +17,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for comparing two shipment emission calculations.
+ *
+ * Base path: /api/v1/compare
  */
 @RestController
-@RequestMapping("/api/v1/compare")
+@RequestMapping(ApiConstants.V1 + "/compare")
 @RequiredArgsConstructor
 @Tag(name = "CO2 Comparison", description = "Compare two shipment emission calculations")
 public class CompareController {
@@ -88,7 +91,7 @@ public class CompareController {
                     )
             )
     })
-    @PutMapping
+    @PostMapping
     public ResponseEntity<CompareResponse> compare(
             @Parameter(description = "Two shipment options to compare", required = true)
             @Valid @RequestBody CompareRequest request) {

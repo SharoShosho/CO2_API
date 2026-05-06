@@ -7,17 +7,26 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
 /**
- * OpenAPI / Swagger UI configuration. Exposes an OpenAPI bean that sets API
- * metadata and registers an API key security scheme so Swagger UI shows an
- * "Authorize" button where users can enter their X-API-KEY before testing
- * endpoints. Swagger UI is available at {@code http://localhost:8080/swagger-ui.html}.
- * OpenAPI JSON spec is available at {@code http://localhost:8080/v3/api-docs}.
+ * OpenAPI / Swagger UI configuration.
+ *
+ * <p>Exposes an {@link OpenAPI} bean that sets API metadata and registers an
+ * API key security scheme so Swagger UI shows an "Authorize" button.
+ *
+ * <p>A {@link GroupedOpenApi} bean groups all v1 paths under the label "v1".
+ * When a v2 is introduced, add a matching {@code v2Api()} bean and a new
+ * set of controllers under {@code /api/v2/}.
+ *
+ * <ul>
+ *   <li>Swagger UI: {@code http://localhost:8080/swagger-ui.html}</li>
+ *   <li>OpenAPI JSON: {@code http://localhost:8080/v3/api-docs}</li>
+ * </ul>
  */
 @Configuration
 public class SwaggerConfig {
@@ -25,8 +34,7 @@ public class SwaggerConfig {
     /**
      * Builds and returns the OpenAPI metadata and security scheme definition.
      * The "ApiKeyAuth" security scheme matches the name used in the
-     * SecurityRequirement annotation on the controller methods, linking the
-     * scheme to those endpoints in the generated documentation.
+     * {@code @SecurityRequirement} annotations on the controller methods.
      *
      * @return configured OpenAPI bean
      */
@@ -40,7 +48,7 @@ public class SwaggerConfig {
                         .title("CO2 Emission Calculation API")
                         .description("REST API for estimating CO2 emissions based on shipment weight, distance, and transport mode. "
                                 + "Designed to work well in RapidAPI marketplaces with clear headers, examples, and predictable JSON errors.")
-                        .version("1.0.2")
+                        .version(ApiConstants.VERSION)
                         .contact(new Contact()
                                 .name("CO2 API Team")
                                 .email("support@co2api.com"))
@@ -56,5 +64,17 @@ public class SwaggerConfig {
                                         .description("Primary API key header. RapidAPI users can also send the key in X-RapidAPI-Key when the API is proxied through RapidAPI.")));
     }
 
-    // No explicit GroupedOpenApi bean: rely on package scanning and the OpenAPI bean above.
+    /**
+     * Groups all v1 endpoints under the Swagger UI "v1" dropdown.
+     * Add a {@code v2Api()} bean here when a second API version is introduced.
+     *
+     * @return GroupedOpenApi covering /api/v1/**
+     */
+    @Bean
+    public GroupedOpenApi v1Api() {
+        return GroupedOpenApi.builder()
+                .group("v1")
+                .pathsToMatch("/api/v1/**")
+                .build();
+    }
 }

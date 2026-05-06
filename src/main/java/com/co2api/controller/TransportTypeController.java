@@ -1,9 +1,11 @@
 package com.co2api.controller;
 
+import com.co2api.config.ApiConstants;
 import com.co2api.dto.ApiErrorResponse;
 import com.co2api.dto.TransportTypeResponse;
 import com.co2api.service.EmissionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,9 +24,11 @@ import java.util.List;
 
 /**
  * REST controller exposing supported transport types.
+ *
+ * Base path: /api/v1/transport-types
  */
 @RestController
-@RequestMapping("/api/v1/transport-types")
+@RequestMapping(ApiConstants.V1 + "/transport-types")
 @RequiredArgsConstructor
 @Tag(name = "Transport Types", description = "List supported transport types and emission factors")
 public class TransportTypeController {
@@ -69,6 +74,51 @@ public class TransportTypeController {
     @GetMapping
     public ResponseEntity<List<TransportTypeResponse>> getTransportTypes() {
         return ResponseEntity.ok(emissionService.getAllTransportTypes());
+    }
+
+    @Operation(
+            summary = "Get a single transport type by code",
+            description = "Returns the emission factor and metadata for a specific transport type code (e.g. TRAIN, FLIGHT).",
+            security = @SecurityRequirement(name = "ApiKeyAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Transport type found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TransportTypeResponse.class),
+                            examples = {@ExampleObject(
+                                    name = "Single transport type",
+                                    summary = "TRAIN example",
+                                    value = """
+                                            {"code":"TRAIN","emissionFactor":0.02,"unit":"kg CO2 / t·km","description":"Freight train — one of the most efficient land transport options"}
+                                            """
+                            )}
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Unknown transport type code",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid API key",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
+            )
+    })
+    @GetMapping("/{code}")
+    public ResponseEntity<TransportTypeResponse> getTransportType(
+            @Parameter(description = "Transport type code, e.g. TRAIN or DIESEL_TRUCK", required = true, example = "TRAIN")
+            @PathVariable String code) {
+        return ResponseEntity.ok(emissionService.getTransportType(code));
     }
 }
 

@@ -1,5 +1,6 @@
 package com.co2api.controller;
 
+import com.co2api.config.ApiConstants;
 import com.co2api.dto.ApiErrorResponse;
 import com.co2api.dto.EmissionResponse;
 import com.co2api.dto.ShipmentRequest;
@@ -31,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * enabling constructor-based dependency injection of EmissionService.
  */
 @RestController
-@RequestMapping("/api/v1/calculate")
+@RequestMapping(ApiConstants.V1 + "/calculate")
 @RequiredArgsConstructor
 @Tag(name = "CO2 Emission Calculation", description = "Endpoints for calculating CO2 emissions from shipments")
 public class CalculationController {
@@ -155,6 +156,4 @@ public class CalculationController {
         EmissionResponse response = emissionService.calculateEmissions(request);
         return ResponseEntity.ok(response);
     }
-
-
 }
