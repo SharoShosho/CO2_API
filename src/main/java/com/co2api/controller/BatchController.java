@@ -1,5 +1,6 @@
 package com.co2api.controller;
 
+import com.co2api.config.ApiConstants;
 import com.co2api.dto.ApiErrorResponse;
 import com.co2api.dto.BatchRequest;
 import com.co2api.dto.BatchResponse;
@@ -23,9 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for batch CO2 emission calculations.
+ *
+ * Base path: /api/v1/calculate/batch
  */
 @RestController
-@RequestMapping("/api/v1/calculate/batch")
+@RequestMapping(ApiConstants.V1 + "/calculate/batch")
 @RequiredArgsConstructor
 @Tag(name = "Batch CO2 Calculation", description = "Calculate CO2 for multiple shipments in one request")
 public class BatchController {
