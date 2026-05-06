@@ -1,29 +1,29 @@
 # CO2 Emission API
 
-REST API för att beräkna CO₂-utsläpp för fraktleveranser. Byggt med Java 17 + Spring Boot 3. Publiceras via [RapidAPI](https://rapidapi.com).
+REST API for calculating CO₂ emissions for freight shipments. Built with Java 17 + Spring Boot 3. Published via [RapidAPI](https://rapidapi.com).
 
 **Version:** 1.0.4
 
-## Vad ingår
+## What's included
 
-- Beräkna CO₂ för ett enskilt frakt (vikt, avstånd, transporttyp)
-- Batch-beräkning för upp till 100 frakter i ett anrop
-- Jämför två fraktalternativ (A vs B)
-- Hitta den lägsta-utsläpps-transporttypen för ett givet frakt
-- Beräkna CO₂ med en egen (anpassad) emissionsfaktor
-- Katalog av alla transporttyper med emissionsfaktorer
-- Interaktiv OpenAPI/Swagger-dokumentation
-- API-nyckelautentisering (`X-API-KEY`) med stöd för `X-RapidAPI-Key`
-- Standardiserade JSON-felmeddelanden (`ApiErrorResponse`) för 400/401/500
-- Enhets- och integrationstester (MockMvc + Spring Boot Test)
+- Calculate CO₂ for a single shipment (weight, distance, transport type)
+- Batch calculation for up to 100 shipments in one request
+- Compare two shipping options (A vs B)
+- Find the lowest-emission transport type for a given shipment
+- Calculate CO₂ with a custom emission factor
+- Catalog of all transport types with emission factors
+- Interactive OpenAPI/Swagger documentation
+- API key authentication (`X-API-KEY`) with support for `X-RapidAPI-Key`
+- Standardized JSON error responses (`ApiErrorResponse`) for 400/401/500
+- Unit and integration tests (MockMvc + Spring Boot Test)
 
-## Snabbstart
+## Quick start
 
-Krav:
+Requirements:
 - Java 17+
 - Maven
 
-Bygg och starta lokalt:
+Build and run locally:
 
 ```bash
 git clone <repo-url>
@@ -32,38 +32,38 @@ mvn clean package
 mvn spring-boot:run
 ```
 
-Standard-server: `http://localhost:8080`
+Default server: `http://localhost:8080`
 
-Sätt en produktions-API-nyckel (PowerShell):
+Set a production API key (PowerShell):
 
 ```powershell
-$env:API_KEY = "din-hemliga-nyckel"
+$env:API_KEY = "your-secret-key"
 mvn spring-boot:run
 ```
 
-Eller kör den packade jar-filen:
+Or run the packaged JAR:
 
 ```bash
-API_KEY=din-hemliga-nyckel java -jar target/co2-api-1.0.4.jar
+API_KEY=your-secret-key java -jar target/co2-api-1.0.2.jar
 ```
 
-## Alla endpoints
+## All endpoints
 
-Alla endpoints kräver headern `X-API-KEY: <din-nyckel>`.
+All endpoints require the header `X-API-KEY: <your-key>`.
 
-| Metod | Sökväg | Beskrivning |
+| Method | Path | Description |
 |-------|--------|-------------|
-| `POST` | `/api/v1/calculate` | Beräkna CO₂ för ett frakt |
-| `POST` | `/api/v1/calculate/batch` | Beräkna CO₂ för flera frakter |
-| `POST` | `/api/v1/compare` | Jämför två fraktalternativ |
-| `POST` | `/api/v1/compare/best` | Hitta bästa transporttyp för ett frakt |
-| `POST` | `/api/v1/estimate` | Beräkna CO₂ med egen emissionsfaktor |
-| `GET` | `/api/v1/transport-types` | Lista alla transporttyper |
-| `GET` | `/api/v1/transport-types/{code}` | Hämta en specifik transporttyp |
+| `POST` | `/api/v1/calculate` | Calculate CO₂ for a single shipment |
+| `POST` | `/api/v1/calculate/batch` | Calculate CO₂ for multiple shipments |
+| `POST` | `/api/v1/compare` | Compare two shipping options |
+| `POST` | `/api/v1/compare/best` | Find the best transport type for a shipment |
+| `POST` | `/api/v1/estimate` | Calculate CO₂ with a custom emission factor |
+| `GET` | `/api/v1/transport-types` | List all transport types |
+| `GET` | `/api/v1/transport-types/{code}` | Get a specific transport type |
 
 ### POST /api/v1/calculate
 
-Beräkna CO₂ för ett enskilt frakt.
+Calculate CO₂ for a single shipment.
 
 ```json
 // Request
@@ -85,7 +85,7 @@ Beräkna CO₂ för ett enskilt frakt.
 
 ### POST /api/v1/calculate/batch
 
-Beräkna CO₂ för upp till 100 frakter i ett anrop.
+Calculate CO₂ for up to 100 shipments in one request.
 
 ```json
 // Request
@@ -105,7 +105,7 @@ Beräkna CO₂ för upp till 100 frakter i ett anrop.
 
 ### POST /api/v1/compare
 
-Jämför två fraktalternativ och se vilket som ger lägst CO₂.
+Compare two shipping options and see which one produces the lowest CO₂.
 
 ```json
 // Request
@@ -126,7 +126,7 @@ Jämför två fraktalternativ och se vilket som ger lägst CO₂.
 
 ### POST /api/v1/compare/best
 
-Hitta den grönaste transporttypen — returnerar alla alternativ rankade från lägst till högst CO₂.
+Find the greenest transport type — returns all options ranked from lowest to highest CO₂.
 
 ```json
 // Request
@@ -136,18 +136,18 @@ Hitta den grönaste transporttypen — returnerar alla alternativ rankade från 
 {
   "best": { "transportType": "SHIP", "totalCo2Kg": 40.0, "emissionFactor": 0.01 },
   "ranked": [
-    { "transportType": "SHIP",          "totalCo2Kg": 40.0  },
-    { "transportType": "TRAIN",         "totalCo2Kg": 80.0  },
-    { "transportType": "ELECTRIC_TRUCK","totalCo2Kg": 120.0 },
-    { "transportType": "DIESEL_TRUCK",  "totalCo2Kg": 440.0 },
-    { "transportType": "FLIGHT",        "totalCo2Kg": 2000.0}
+    { "transportType": "SHIP",           "totalCo2Kg": 40.0  },
+    { "transportType": "TRAIN",          "totalCo2Kg": 80.0  },
+    { "transportType": "ELECTRIC_TRUCK", "totalCo2Kg": 120.0 },
+    { "transportType": "DIESEL_TRUCK",   "totalCo2Kg": 440.0 },
+    { "transportType": "FLIGHT",         "totalCo2Kg": 2000.0 }
   ]
 }
 ```
 
 ### POST /api/v1/estimate
 
-Beräkna CO₂ med en egen emissionsfaktor (t.ex. ett certifierat värde).
+Calculate CO₂ with a custom emission factor (for example, a certified value).
 
 ```json
 // Request
@@ -159,15 +159,15 @@ Beräkna CO₂ med en egen emissionsfaktor (t.ex. ett certifierat värde).
 
 ### GET /api/v1/transport-types
 
-Lista alla transporttyper med emissionsfaktorer och beskrivningar.
+List all transport types with emission factors and descriptions.
 
 ### GET /api/v1/transport-types/{code}
 
-Hämta en specifik transporttyp, t.ex. `GET /api/v1/transport-types/TRAIN`.
+Get a specific transport type, for example `GET /api/v1/transport-types/TRAIN`.
 
-## Felhantering
+## Error handling
 
-Alla fel returneras som `ApiErrorResponse`:
+All errors are returned as `ApiErrorResponse`:
 
 ```json
 {
@@ -180,58 +180,58 @@ Alla fel returneras som `ApiErrorResponse`:
 }
 ```
 
-| Status | Beskrivning |
+| Status | Description |
 |--------|-------------|
-| 400 | Valideringsfel eller felaktig JSON |
-| 401 | Saknad eller ogiltig API-nyckel |
-| 500 | Oväntade serverfel |
+| 400 | Validation error or invalid JSON |
+| 401 | Missing or invalid API key |
+| 500 | Unexpected server error |
 
-## Emissionsfaktorer (formel)
+## Emission factors (formula)
 
 `CO₂ (kg) = (weightKg / 1000) × distanceKm × emissionFactor`
 
-Faktorer definieras i `TransportType`-enum (kg CO₂ per ton·km):
+Factors are defined in the `TransportType` enum (kg CO₂ per ton·km):
 
-| Kod | Faktor | Beskrivning |
+| Code | Factor | Description |
 |-----|--------|-------------|
-| `DIESEL_TRUCK` | 0.11 | Standard diesellastbil för frakt |
-| `ELECTRIC_TRUCK` | 0.03 | Elektrisk lastbil |
-| `TRAIN` | 0.02 | Godståg — ett av de mest effektiva alternativen |
-| `FLIGHT` | 0.50 | Flygfrakt — högst utsläppsintensitet |
-| `SHIP` | 0.01 | Containerfartyg — effektivt för stora volymer |
+| `DIESEL_TRUCK` | 0.11 | Standard diesel freight truck |
+| `ELECTRIC_TRUCK` | 0.03 | Electric truck |
+| `TRAIN` | 0.02 | Freight train — one of the most efficient options |
+| `FLIGHT` | 0.50 | Air freight — highest emission intensity |
+| `SHIP` | 0.01 | Container ship — efficient for large volumes |
 
 ## OpenAPI / Swagger
 
-Interaktiv dokumentation: `http://localhost:8080/swagger-ui.html`  
+Interactive documentation: `http://localhost:8080/swagger-ui.html`  
 Raw spec (JSON): `http://localhost:8080/v3/api-docs`
 
 ## Docker
 
 ```dockerfile
 FROM eclipse-temurin:17-jre-jammy
-COPY target/co2-api-1.0.4.jar app.jar
+COPY target/co2-api-1.0.2.jar app.jar
 ENV API_KEY=changeme-replace-in-production
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
-## Tester
+## Tests
 
 ```bash
 mvn test
 ```
 
-## Att bygga vidare
+## Extending the project
 
-Projektet är strukturerat för att vara enkelt att utöka:
+The project is structured to make it easy to extend:
 
-- **Ny transporttyp** — Lägg till en ny konstant i `TransportType.java` med faktor och beskrivning. Inga andra filer behöver ändras.
-- **Ny API-version (v2)** — Skapa controllers med `ApiConstants.V2`-prefix och lägg till en `v2Api()` bean i `SwaggerConfig.java`.
-- **Databas** — Lägg till JPA-entitet och repository, spara resultat i `EmissionService`.
-- **Rate limiting** — Lägg till ett nytt `HandlerInterceptor` och registrera det i `WebConfig.java`.
-- **Ny endpoint** — Skapa en ny controller i `com.co2api.controller`, använd `ApiConstants.V1` som prefix och lägg till affärslogiken i `EmissionService`.
+- **New transport type** — Add a new constant in `TransportType.java` with a factor and description. No other files need to change.
+- **New API version (v2)** — Create controllers with the `ApiConstants.V2` prefix and add a `v2Api()` bean in `SwaggerConfig.java`.
+- **Database** — Add a JPA entity and repository, then store results in `EmissionService`.
+- **Rate limiting** — Add a new `HandlerInterceptor` and register it in `WebConfig.java`.
+- **New endpoint** — Create a new controller in `com.co2api.controller`, use the `ApiConstants.V1` prefix, and add business logic in `EmissionService`.
 
 ## RapidAPI
 
-- API:et stöder `X-RapidAPI-Key` utöver `X-API-KEY` (hanteras i `ApiKeyInterceptor`).
-- Alla felresponser är förutsägbara JSON-objekt, vilket underlättar för RapidAPI-konsumenter att parsa och visa fel.
+- The API supports `X-RapidAPI-Key` in addition to `X-API-KEY` (handled in `ApiKeyInterceptor`).
+- All error responses are predictable JSON objects, which makes it easier for RapidAPI consumers to parse and display errors.
