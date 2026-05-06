@@ -15,7 +15,7 @@
 
     <groupId>com.co2api</groupId>
     <artifactId>co2-api</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
     <name>CO2 Emission API</name>
     <description>REST API for calculating CO2 emissions based on shipment data</description>
 

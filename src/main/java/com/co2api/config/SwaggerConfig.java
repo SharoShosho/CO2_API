@@ -40,7 +40,7 @@ public class SwaggerConfig {
                         .title("CO2 Emission Calculation API")
                         .description("REST API for estimating CO2 emissions based on shipment weight, distance, and transport mode. "
                                 + "Designed to work well in RapidAPI marketplaces with clear headers, examples, and predictable JSON errors.")
-                        .version("1.0.0")
+                        .version("1.0.2")
                         .contact(new Contact()
                                 .name("CO2 API Team")
                                 .email("support@co2api.com"))
