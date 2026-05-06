@@ -123,9 +123,6 @@ public class EmissionService {
         double co2B = resultB.getTotalCo2Kg();
 
         double differenceKg = co2A - co2B;
-        double differencePercent = (Math.abs(co2A) < 1e-10) ? 0.0 : (differenceKg / co2A) * 100.0;
-        double absoluteDifferenceKg = Math.abs(differenceKg);
-
         String betterOption;
         if (co2A < co2B) {
             betterOption = "OPTION_A";
@@ -134,6 +131,8 @@ public class EmissionService {
         } else {
             betterOption = "EQUAL";
         }
+
+        double absoluteDifferenceKg = Math.abs(differenceKg);
 
         String summary;
         if ("OPTION_A".equals(betterOption)) {
@@ -171,6 +170,10 @@ public class EmissionService {
                 })
                 .sorted(Comparator.comparingDouble(EmissionResponse::getTotalCo2Kg))
                 .collect(Collectors.toList());
+
+        if (ranked.isEmpty()) {
+            throw new IllegalStateException("No transport types available for best-route calculation");
+        }
 
         return BestRouteResponse.builder()
                 .best(ranked.get(0))
